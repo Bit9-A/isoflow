@@ -3,6 +3,8 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
 module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
@@ -15,6 +17,12 @@ module.exports = {
   devServer: {
     static: {
       directory: path.join(__dirname, 'build')
+    },
+    proxy: {
+      '/api/ai': {
+        target: 'http://localhost:8787',
+        changeOrigin: true
+      }
     },
     allowedHosts: [
       '.csb.app', // So Codesandbox.io can run the dev server
@@ -33,11 +41,11 @@ module.exports = {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader']
       },
-        
-        {
-          test: /\.svg$/i,
-          type: 'asset/inline'
-        }
+
+      {
+        test: /\.svg$/i,
+        type: 'asset/inline'
+      }
     ]
   },
   resolve: {
@@ -49,8 +57,10 @@ module.exports = {
       template: path.resolve(__dirname, '../src/index.html')
     }),
     new webpack.DefinePlugin({
-      PACKAGE_VERSION: JSON.stringify(require("../package.json").version),
-      REPOSITORY_URL: JSON.stringify(require("../package.json").repository.url),
+      PACKAGE_VERSION: JSON.stringify(require('../package.json').version),
+      REPOSITORY_URL: JSON.stringify(require('../package.json').repository.url),
+      'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || ''),
+      'process.env.GEMINI_MODEL': JSON.stringify(process.env.GEMINI_MODEL || 'gemini-2.5-flash')
     })
   ]
 };

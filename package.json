@@ -12,6 +12,8 @@
   "types": "./dist/Isoflow.d.ts",
   "scripts": {
     "start": "webpack serve --config ./webpack/dev.config.js",
+    "start:with-proxy": "concurrently \"npm run start\" \"npm run ai:proxy\"",
+    "ai:proxy": "node ./server/aiProxy.js",
     "dev": "nodemon --watch ./src/ -e ts,tsx --exec npm run build",
     "build": "webpack --config ./webpack/prod.config.js && tsc --declaration --emitDeclarationOnly && tsc-alias",
     "build:app": "webpack --config ./webpack/tauri.config.js",
@@ -43,6 +45,7 @@
     "@typescript-eslint/parser": "^6.0.0",
     "concurrently": "^7.6.0",
     "css-loader": "^6.8.1",
+    "dotenv": "^17.3.1",
     "eslint": "^8.44.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.1.0",

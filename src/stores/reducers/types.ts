@@ -1,4 +1,5 @@
 import { Model, Scene } from 'src/types';
+import { AIInstruction, AISchema, AISettings } from 'src/types/ai';
 import type * as viewReducers from './view';
 import type * as viewItemReducers from './viewItem';
 import type * as connectorReducers from './connector';
@@ -88,6 +89,22 @@ type ViewReducerAction =
   | {
       action: 'CHANGE_LAYER_ORDER';
       payload: Parameters<typeof layerOrderingReducers.changeLayerOrder>[0];
+    }
+  | {
+      action: 'EXECUTE_AI_INSTRUCTION';
+      payload: AIInstruction;
+    }
+  | {
+      action: 'CREATE_AI_SCHEMA';
+      payload: AISchema;
+    }
+  | {
+      action: 'UPDATE_AI_SETTINGS';
+      payload: AISettings;
+    }
+  | {
+      action: 'UNDO_AI_ACTION';
+      payload: string;
     };
 
 export type ViewReducerParams = ViewReducerAction & { ctx: ViewReducerContext };

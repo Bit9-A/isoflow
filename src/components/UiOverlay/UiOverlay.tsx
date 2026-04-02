@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { Box, useTheme, Typography, Stack } from '@mui/material';
-import { ChevronRight } from '@mui/icons-material';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Box, IconButton, useTheme, Typography, Stack } from '@mui/material';
+import { ChevronRight, AutoAwesome } from '@mui/icons-material';
 import { EditorModeEnum } from 'src/types';
 import { UiElement } from 'components/UiElement/UiElement';
 import { SceneLayer } from 'src/components/SceneLayer/SceneLayer';
@@ -16,13 +16,15 @@ import { ContextMenuManager } from 'src/components/ContextMenu/ContextMenuManage
 import { useScene } from 'src/hooks/useScene';
 import { useModelStore } from 'src/stores/modelStore';
 import { ExportImageDialog } from '../ExportImageDialog/ExportImageDialog';
+import ChatPanel from '../Chat/ChatPanel';
 
 const ToolsEnum = {
   MAIN_MENU: 'MAIN_MENU',
   ZOOM_CONTROLS: 'ZOOM_CONTROLS',
   TOOL_MENU: 'TOOL_MENU',
   ITEM_CONTROLS: 'ITEM_CONTROLS',
-  VIEW_TITLE: 'VIEW_TITLE'
+  VIEW_TITLE: 'VIEW_TITLE',
+  AI_CHAT: 'AI_CHAT'
 } as const;
 
 interface EditorModeMapping {
@@ -35,7 +37,8 @@ const EDITOR_MODE_MAPPING: EditorModeMapping = {
     'ZOOM_CONTROLS',
     'TOOL_MENU',
     'MAIN_MENU',
-    'VIEW_TITLE'
+    'VIEW_TITLE',
+    'AI_CHAT'
   ],
   [EditorModeEnum.EXPLORABLE_READONLY]: ['ZOOM_CONTROLS', 'VIEW_TITLE'],
   [EditorModeEnum.NON_INTERACTIVE]: []
@@ -51,6 +54,7 @@ export const UiOverlay = () => {
   const theme = useTheme();
   const contextMenuAnchorRef = useRef();
   const { appPadding } = theme.customVars;
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const spacing = useCallback(
     (multiplier: number) => {
       return parseInt(theme.spacing(multiplier), 10);
@@ -238,6 +242,64 @@ export const UiOverlay = () => {
         <Box ref={contextMenuAnchorRef} />
         <ContextMenuManager anchorEl={contextMenuAnchorRef.current} />
       </SceneLayer>
+
+      {/* AI Chat Panel */}
+      {availableTools.includes('AI_CHAT') && (
+        <>
+          <ChatPanel
+            isOpen={isChatOpen}
+            onClose={() => {
+              return setIsChatOpen(false);
+            }}
+          />
+          {!isChatOpen && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 100,
+                right: 20,
+                zIndex: 1100
+              }}
+            >
+              <IconButton
+                onClick={() => {
+                  return setIsChatOpen(true);
+                }}
+                sx={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: '14px',
+                  background:
+                    'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  color: '#fff',
+                  boxShadow:
+                    '0 4px 20px rgba(99, 102, 241, 0.4), 0 0 0 0 rgba(99,102,241,0.3)',
+                  animation:
+                    'fabPulse 3s ease-in-out infinite',
+                  '@keyframes fabPulse': {
+                    '0%, 100%': {
+                      boxShadow:
+                        '0 4px 20px rgba(99, 102, 241, 0.4), 0 0 0 0 rgba(99,102,241,0.3)'
+                    },
+                    '50%': {
+                      boxShadow:
+                        '0 4px 24px rgba(99, 102, 241, 0.55), 0 0 0 6px rgba(99,102,241,0.08)'
+                    }
+                  },
+                  '&:hover': {
+                    background:
+                      'linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)',
+                    transform: 'scale(1.08)',
+                    transition: 'all 0.2s ease'
+                  }
+                }}
+              >
+                <AutoAwesome sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Box>
+          )}
+        </>
+      )}
     </>
   );
 };

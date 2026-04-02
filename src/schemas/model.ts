@@ -6,6 +6,11 @@ import { viewsSchema } from './views';
 import { validateModel } from './validation';
 import { iconsSchema } from './icons';
 import { colorsSchema } from './colors';
+import {
+  aiInstructionSchema,
+  aiSettingsSchema,
+  aiSchemaSchema
+} from '../types/ai';
 
 export const modelSchema = z
   .object({
@@ -15,7 +20,10 @@ export const modelSchema = z
     items: modelItemsSchema,
     views: viewsSchema,
     icons: iconsSchema,
-    colors: colorsSchema
+    colors: colorsSchema,
+    aiInstructions: z.array(aiInstructionSchema).optional(),
+    aiSchemas: z.array(aiSchemaSchema).optional(),
+    aiSettings: aiSettingsSchema.optional()
   })
   .superRefine((model, ctx) => {
     const issues = validateModel({ ...INITIAL_DATA, ...model });
