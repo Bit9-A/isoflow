@@ -1,4 +1,7 @@
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const { URL } = require('url');
 
 const PORT = Number(process.env.AI_PROXY_PORT || 8787);
@@ -44,6 +47,59 @@ const writeSse = (res, payload) => {
   res.write(`data: ${JSON.stringify(payload)}\n\n`);
 };
 
+/**
+ * Recursively find all SKILL.md files in a directory
+ */
+const findSkillFiles = (dir) => {
+  let results = [];
+  try {
+    if (!fs.existsSync(dir)) return results;
+    const list = fs.readdirSync(dir);
+    list.forEach((file) => {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+      if (stat && stat.isDirectory()) {
+        results = results.concat(findSkillFiles(filePath));
+      } else if (file === 'SKILL.md') {
+        results.push(filePath);
+      }
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(`[ai-proxy] Error scanning skills in ${dir}:`, err.message);
+  }
+  return results;
+};
+
+/**
+ * Load and concatenate all available skills from local and global paths
+ */
+const loadSkillsPayload = () => {
+  const localSkillsDir = path.join(__dirname, '..', '.agents', 'skills');
+  const globalSkillsDir = path.join(os.homedir(), '.agents', 'skills');
+
+  const files = [
+    ...findSkillFiles(localSkillsDir),
+    ...findSkillFiles(globalSkillsDir)
+  ];
+
+  if (files.length === 0) return '';
+
+  let skillsText = '\n\n### INJECTED SKILLS FROM PROJECT CONTEXT\n';
+  files.forEach((file) => {
+    try {
+      const content = fs.readFileSync(file, 'utf8');
+      const skillName = path.basename(path.dirname(file));
+      skillsText += `\n--- SKILL: ${skillName} ---\n${content}\n`;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`[ai-proxy] Could not read skill ${file}:`, err.message);
+    }
+  });
+
+  return skillsText;
+};
+
 const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, corsHeaders);
@@ -65,6 +121,15 @@ const server = http.createServer(async (req, res) => {
 
   try {
     const body = await parseBody(req);
+
+    // Inject skills into systemInstruction if available
+    const injectedSkills = loadSkillsPayload();
+    if (injectedSkills && body.systemInstruction && body.systemInstruction.parts) {
+      body.systemInstruction.parts[0].text += injectedSkills;
+      // eslint-disable-next-line no-console
+      console.log(`[ai-proxy] Injected ${injectedSkills.length} characters of skill context`);
+    }
+
     const endpoint = new URL(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent`
     );

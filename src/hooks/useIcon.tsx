@@ -14,7 +14,18 @@ export const useIcon = (id: string | undefined) => {
   const icon = useMemo(() => {
     if (!id) return DEFAULT_ICON;
 
-    return getItemByIdOrThrow(icons, id).value;
+    const found = icons.find((i) => {
+      return i.id === id;
+    });
+
+    if (found) return found;
+
+    // Fallback to 'block' icon or DEFAULT_ICON if not found
+    return (
+      icons.find((i) => {
+        return i.id === 'block';
+      }) ?? DEFAULT_ICON
+    );
   }, [icons, id]);
 
   useEffect(() => {

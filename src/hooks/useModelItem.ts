@@ -9,7 +9,18 @@ export const useModelItem = (id: string): ModelItem => {
   });
 
   const modelItem = useMemo(() => {
-    return getItemByIdOrThrow(model.items, id).value;
+    const found = model.items.find((item) => {
+      return item.id === id;
+    });
+
+    if (found) return found;
+
+    // Fallback model item to prevent crash
+    return {
+      id,
+      name: id,
+      icon: 'block'
+    };
   }, [id, model.items]);
 
   return modelItem;

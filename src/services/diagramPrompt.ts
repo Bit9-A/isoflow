@@ -153,11 +153,24 @@ YOUR RESPONSE MUST be a JSON object:
   }
 }
 
+LARGE INPUT HANDLING (for database schemas, Prisma models, complex systems):
+- When the user provides a large schema (10+ entities/models/tables), DO NOT create one node per entity.
+- Instead, GROUP related entities into MODULE-LEVEL nodes. For example:
+    * A Prisma schema with 40 models across 8 modules → create 8-10 nodes (one per module).
+    * Each module node should list its key entities in the description.
+    * Example: a "Geography Module" node with description listing Estado, Municipio, Parroquia.
+- Target MAXIMUM 15-20 viewItems total to keep the diagram readable.
+- Connect modules with connectors showing data flow relationships.
+- Use rectangles to group related modules visually.
+- Keep the "summary" field SHORT (under 200 characters).
+- Keep "suggestions" to 3-5 items maximum, each under 100 characters.
+
 RULES:
 - Only include "changes" when the user asks to ADD or MODIFY elements.
 - For analysis requests, return summary + suggestions with empty changes.
-- Generate descriptive ids like "firewall-1", "db-primary", "zone-dmz".
-- Keep strings under 100 characters. Use integer coordinates.
+- Generate descriptive ids like "mod-geography", "mod-users", "zone-core".
+- Keep ALL strings under 100 characters. Use integer coordinates.
+- ALWAYS complete the entire JSON. Never stop mid-response.
 - Be conservative: do NOT delete existing elements.`;
 };
 

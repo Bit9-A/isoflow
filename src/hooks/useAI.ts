@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: AISettings = {
   apiKey: process.env.GEMINI_API_KEY || '',
   privacyMode: 'private',
   temperature: 0.3,
-  maxTokens: 16384
+  maxTokens: 65536
 };
 
 export const useAI = () => {
@@ -189,12 +189,31 @@ export const useAI = () => {
             tile: { x: number; y: number };
             labelHeight?: number;
           };
+          const name = aiElement.name || element.id;
+          const iconId = aiElement.iconId;
+          const isValidIcon = model.icons.some((i) => {
+            return i.id === iconId;
+          });
+
           createModelItem({
             id: element.id,
-            name: aiElement.name || element.id,
-            icon: aiElement.iconId || undefined
+            name,
+            description: aiElement.description || undefined,
+            icon: isValidIcon ? iconId : 'block'
           });
           existingItemIds.add(element.id);
+
+          // Auto-calculate labelHeight based on name length if not provided
+          if (!aiElement.labelHeight) {
+            const nameLen = name.length;
+            if (nameLen > 30) {
+              (element as any).labelHeight = 180;
+            } else if (nameLen > 15) {
+              (element as any).labelHeight = 140;
+            } else {
+              (element as any).labelHeight = 80;
+            }
+          }
         }
         createViewItem(element);
       });
