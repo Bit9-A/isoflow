@@ -87,34 +87,64 @@ CRITICAL OUTPUT RULES:
 - Start your response with { and end with }.
 - If you cannot fulfill the request, still return valid JSON with an error summary.
 
+AVAILABLE ICONS — use the "iconId" field in viewItems to assign the right icon:
+  "block"             → Generic component / default
+  "storage"           → Database, data warehouse, persistent storage
+  "cloud"             → Cloud service, SaaS provider, external API
+  "desktop"           → Desktop workstation, on-premises server
+  "laptop"            → User device, end-user client
+  "firewall"          → Firewall, security gateway, WAF
+  "dns"               → DNS server, name resolution
+  "cache"             → Cache, Redis, Memcached, in-memory store
+  "loadbalancer"      → Load balancer, traffic distributor, reverse proxy
+  "lock"              → Authentication, IAM, security service, encryption
+  "cube"              → Container, Docker, microservice, generic service
+  "diamond"           → Decision point, routing logic, conditional flow
+  "document"          → Document, report, log file, configuration
+  "cardterminal"      → Payment terminal, POS, billing
+  "cronjob"           → Scheduled task, batch job, cron
+  "function-module"   → Serverless function, Lambda, Cloud Function
+  "image"             → Media service, image processing, CDN asset
+  Also available: GCP icons (gcp-*), Azure icons (azure-*), K8s icons (k8s-*)
+
+AVAILABLE COLORS for rectangles (use these IDs, NOT hex values):
+  "color1" (#a5b8f3 blue), "color2" (#bbadfb purple), "color3" (#f4eb8e yellow),
+  "color4" (#f0aca9 red), "color5" (#fad6ac orange), "color6" (#a8dc9d green),
+  "color7" (#b3e5e3 teal)
+
 ISOFLOW DATA MODEL — You MUST follow these exact schemas:
 
-1. ViewItem (a node placed on the isometric grid):
-   { "id": "unique-string", "tile": {"x": integer, "y": integer}, "labelHeight": number (default 80) }
-   - "id" must match an existing modelItem id or be a new unique id
-   - "tile" uses isometric grid coords (integers, typically 0-20 range)
-   - Place nodes with spacing of at least 2-3 tiles between them
+1. ViewItem (a node on the isometric grid):
+   { "id": "unique-string", "name": "Label", "description": "optional", "iconId": "icon-id-from-catalog", "tile": {"x": int, "y": int}, "labelHeight": 80 }
+   - "iconId" MUST be one of the available icons listed above. Choose the most semantically appropriate icon.
+   - "name" is REQUIRED for new nodes.
 
-2. Connector (a line between two nodes):
-   { "id": "unique-string", "anchors": [{"id": "a1", "ref": {"item": "node-id-1"}}, {"id": "a2", "ref": {"item": "node-id-2"}}], "style": "SOLID"|"DOTTED"|"DASHED", "width": number (default 10) }
-   - A connector MUST have exactly 2 anchors
-   - Each anchor.ref.item must reference a valid viewItem id
-   - Use "SOLID" for main connections, "DASHED" for optional, "DOTTED" for monitoring
+2. Connector (line between two nodes):
+   { "id": "unique-string", "anchors": [{"id": "a1", "ref": {"item": "node-id-1"}}, {"id": "a2", "ref": {"item": "node-id-2"}}], "style": "SOLID"|"DOTTED"|"DASHED", "width": 10 }
+   - A connector MUST have exactly 2 anchors. Each anchor.ref.item must reference a valid viewItem id.
 
-3. TextBox (a text label on the grid):
-   { "id": "unique-string", "tile": {"x": integer, "y": integer}, "content": "string (max 100 chars)", "fontSize": number (default 0.6), "orientation": "X"|"Y" }
-   - "X" orientation runs left-right, "Y" runs top-bottom
+3. TextBox (text label):
+   { "id": "unique-string", "tile": {"x": int, "y": int}, "content": "string (max 100)", "fontSize": 0.6, "orientation": "X"|"Y" }
 
-4. Rectangle (a colored zone/region on the grid):
-   { "id": "unique-string", "from": {"x": integer, "y": integer}, "to": {"x": integer, "y": integer}, "color": "hex-color-string (optional)" }
-   - "from" is top-left corner, "to" is bottom-right corner
-   - Use to group related nodes visually
+4. Rectangle (colored zone):
+   { "id": "unique-string", "from": {"x": int, "y": int}, "to": {"x": int, "y": int}, "color": "color1" }
+   - "color" MUST be one of: color1, color2, color3, color4, color5, color6, color7
 
-YOUR RESPONSE MUST be a JSON object with this exact structure:
+SPATIAL POSITIONING RULES:
+- Read the existing nodes' positions from the diagram state provided.
+- Compute the bounding box of all existing nodes (minX, maxX, minY, maxY).
+- Place NEW nodes OUTSIDE or ADJACENT to the existing bounds to avoid overlap.
+- If the diagram is empty, start placing nodes around coordinates (0, 0).
+- Space nodes at least 3-4 tiles apart from each other.
+- Arrange nodes in logical groups (e.g., clients on one side, servers in middle, databases on other side).
+- Place rectangles (zones) to visually group related nodes, with 1-2 tiles of padding around them.
+- Place text labels near their related zone, offset by 1 tile.
+
+YOUR RESPONSE MUST be a JSON object:
 {
-  "summary": "Brief description of analysis and recommendations (string, required)",
-  "confidence": 0.0 to 1.0 (number, required),
-  "suggestions": ["actionable suggestion 1", "suggestion 2", ...],
+  "summary": "Brief description (string, required)",
+  "confidence": 0.0 to 1.0,
+  "suggestions": ["suggestion 1", ...],
   "changes": {
     "viewItems": [...],
     "connectors": [...],
@@ -124,23 +154,41 @@ YOUR RESPONSE MUST be a JSON object with this exact structure:
 }
 
 RULES:
-- Only include "changes" when the user explicitly asks to ADD or MODIFY diagram elements.
-- For analysis/review requests, return summary + suggestions with empty or no changes.
-- Generate unique ids using descriptive names like "firewall-1", "db-primary", "zone-dmz".
-- Keep all string values under 100 characters.
-- Use integer coordinates for all tile positions.
-- Prioritize security recommendations: segmentation, IAM, encryption, ingress/egress control.
-- Be conservative: do NOT delete existing elements. Only add new ones or suggest modifications.`;
+- Only include "changes" when the user asks to ADD or MODIFY elements.
+- For analysis requests, return summary + suggestions with empty changes.
+- Generate descriptive ids like "firewall-1", "db-primary", "zone-dmz".
+- Keep strings under 100 characters. Use integer coordinates.
+- Be conservative: do NOT delete existing elements.`;
 };
 
 export const buildUserPrompt = (
   instruction: string,
-  context: DiagramContext
+  context: DiagramContext,
+  chatHistory?: import('src/types/ai').ChatMessage[]
 ): string => {
+  // Keep only the last 6 messages and truncate long assistant messages
+  const recentHistory = chatHistory ? chatHistory.slice(-6) : [];
+  const historyOutput =
+    recentHistory.length > 0
+      ? `\nChat History:\n${recentHistory
+          .map((m) => {
+            const role = m.role === 'user' ? 'User' : 'Assistant';
+            const content =
+              m.role === 'assistant' && m.content.length > 300
+                ? m.content.substring(0, 300) + '...'
+                : m.content;
+            return `${role}: ${content}`;
+          })
+          .join('\n')}`
+      : '';
+
   return [
     `User request: ${instruction}`,
+    historyOutput,
     '',
     'Current Isoflow diagram state:',
     diagramContextToPrompt(context)
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 };

@@ -25,6 +25,7 @@ export interface DiagramContext {
 export interface AIExecutionOptions {
   onToken?: (token: string) => void;
   signal?: AbortSignal;
+  chatHistory?: ChatMessage[];
 }
 
 export interface AIResult {
@@ -323,6 +324,9 @@ export const aiSchemaSchema = z.object({
 
 const aiResponseViewItemSchema = z.object({
   id: z.string(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  iconId: z.string().optional(),
   tile: z.object({ x: z.number(), y: z.number() }),
   labelHeight: z.number().optional()
 });

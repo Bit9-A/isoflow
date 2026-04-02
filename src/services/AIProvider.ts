@@ -117,7 +117,10 @@ const extractJsonObject = (text: string): unknown => {
   // eslint-disable-next-line no-console
   console.debug('[Isoflow AI] extractJsonObject input length:', text.length);
   // eslint-disable-next-line no-console
-  console.debug('[Isoflow AI] extractJsonObject input preview:', text.substring(0, 400));
+  console.debug(
+    '[Isoflow AI] extractJsonObject input preview:',
+    text.substring(0, 400)
+  );
 
   // Strip markdown code fences that thinking models may add
   let cleaned = text
@@ -146,7 +149,10 @@ const extractJsonObject = (text: string): unknown => {
 
   if (start === -1) {
     // eslint-disable-next-line no-console
-    console.error('[Isoflow AI] No JSON object found in response:', cleaned.substring(0, 500));
+    console.error(
+      '[Isoflow AI] No JSON object found in response:',
+      cleaned.substring(0, 500)
+    );
     throw new Error('La respuesta de IA no contiene un JSON valido.');
   }
 
@@ -165,7 +171,10 @@ const extractJsonObject = (text: string): unknown => {
 
   if (end === -1) {
     // eslint-disable-next-line no-console
-    console.error('[Isoflow AI] Unbalanced braces in response:', cleaned.substring(0, 500));
+    console.error(
+      '[Isoflow AI] Unbalanced braces in response:',
+      cleaned.substring(0, 500)
+    );
     throw new Error('La respuesta de IA no contiene un JSON valido.');
   }
 
@@ -175,7 +184,11 @@ const extractJsonObject = (text: string): unknown => {
     return JSON.parse(candidate);
   } catch (parseError) {
     // eslint-disable-next-line no-console
-    console.error('[Isoflow AI] Failed to parse extracted JSON:', candidate.substring(0, 500), parseError);
+    console.error(
+      '[Isoflow AI] Failed to parse extracted JSON:',
+      candidate.substring(0, 500),
+      parseError
+    );
     throw new Error('La respuesta de IA no contiene un JSON valido.');
   }
 };
@@ -240,13 +253,21 @@ export const processInstructionWithProvider = async (
       body: JSON.stringify({
         generationConfig: {
           temperature: settings.temperature ?? 0.3,
-          maxOutputTokens: settings.maxTokens ?? 2000,
+          maxOutputTokens: settings.maxTokens ?? 16384,
           responseMimeType: 'application/json'
         },
         contents: [
           {
             role: 'user',
-            parts: [{ text: buildUserPrompt(instruction, context) }]
+            parts: [
+              {
+                text: buildUserPrompt(
+                  instruction,
+                  context,
+                  options?.chatHistory
+                )
+              }
+            ]
           }
         ],
         systemInstruction: {
@@ -282,13 +303,17 @@ export const processInstructionWithProvider = async (
     const requestBody = {
       generationConfig: {
         temperature: settings.temperature ?? 0.3,
-        maxOutputTokens: settings.maxTokens ?? 4096,
+        maxOutputTokens: settings.maxTokens ?? 16384,
         responseMimeType: 'application/json'
       },
       contents: [
         {
           role: 'user',
-          parts: [{ text: buildUserPrompt(instruction, context) }]
+          parts: [
+            {
+              text: buildUserPrompt(instruction, context, options?.chatHistory)
+            }
+          ]
         }
       ],
       systemInstruction: {
@@ -299,7 +324,9 @@ export const processInstructionWithProvider = async (
     for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
       try {
         // eslint-disable-next-line no-console
-        console.debug(`[Isoflow AI] Attempt ${attempt}/${maxRetries} — ${model}`);
+        console.debug(
+          `[Isoflow AI] Attempt ${attempt}/${maxRetries} — ${model}`
+        );
 
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -341,7 +368,10 @@ export const processInstructionWithProvider = async (
 
         if (candidates.length === 0) {
           // eslint-disable-next-line no-console
-          console.warn('[Isoflow AI] No candidates in response:', JSON.stringify(json).substring(0, 500));
+          console.warn(
+            '[Isoflow AI] No candidates in response:',
+            JSON.stringify(json).substring(0, 500)
+          );
 
           if (attempt < maxRetries) {
             await new Promise((resolve) => {
@@ -350,7 +380,9 @@ export const processInstructionWithProvider = async (
             continue;
           }
 
-          throw new Error('La IA no generó ninguna respuesta. Intenta de nuevo.');
+          throw new Error(
+            'La IA no generó ninguna respuesta. Intenta de nuevo.'
+          );
         }
 
         const allParts = candidates[0]?.content?.parts ?? [];
@@ -377,11 +409,17 @@ export const processInstructionWithProvider = async (
         // eslint-disable-next-line no-console
         console.debug('[Isoflow AI] Extracted text length:', rawText.length);
         // eslint-disable-next-line no-console
-        console.debug('[Isoflow AI] Extracted text preview:', rawText.substring(0, 300));
+        console.debug(
+          '[Isoflow AI] Extracted text preview:',
+          rawText.substring(0, 300)
+        );
 
         if (!rawText.trim()) {
           // eslint-disable-next-line no-console
-          console.warn('[Isoflow AI] Empty text after filtering thoughts. Raw parts:', JSON.stringify(allParts).substring(0, 500));
+          console.warn(
+            '[Isoflow AI] Empty text after filtering thoughts. Raw parts:',
+            JSON.stringify(allParts).substring(0, 500)
+          );
 
           if (attempt < maxRetries) {
             await new Promise((resolve) => {

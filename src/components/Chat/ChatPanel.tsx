@@ -19,6 +19,7 @@ import {
   useUpdateChatMessage
 } from 'src/stores/aiStateStore';
 import type { ChatMessage } from 'src/types/ai';
+import { extractStreamedText } from 'src/utils/aiUtils';
 import { UiElement } from 'src/components/UiElement/UiElement';
 
 interface ChatPanelProps {
@@ -47,7 +48,8 @@ const GLASS = {
   bgLight: 'rgba(30, 41, 59, 0.55)',
   border: 'rgba(99, 102, 241, 0.25)',
   borderLight: 'rgba(148, 163, 184, 0.15)',
-  headerGrad: 'linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.25) 100%)',
+  headerGrad:
+    'linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.25) 100%)',
   userBubble: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
   aiBubble: 'rgba(30, 41, 59, 0.65)',
   accent: '#818cf8',
@@ -61,10 +63,7 @@ const GLASS = {
   textMuted: '#64748b'
 };
 
-const ChatPanel: React.FC<ChatPanelProps> = ({
-  isOpen = true,
-  onClose
-}) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
   const theme = useTheme();
   const { items, connectors, textBoxes, rectangles } = useScene();
   const { executeInstruction, applyAIResult, settings } = useAI();
@@ -125,10 +124,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     try {
       const result = await executeInstruction(instruction, {
+        chatHistory: messages,
         onToken: (token) => {
           streamBuffer += token;
           updateMessage(assistantMessage.id, {
-            content: streamBuffer || STREAMING_PLACEHOLDER
+            content: extractStreamedText(streamBuffer) || STREAMING_PLACEHOLDER
           });
         }
       });
@@ -151,12 +151,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       let errorMsg = 'No se pudo completar la consulta de IA.';
 
       if (error instanceof Error) {
-        if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
-          errorMsg = '⏳ Límite de uso alcanzado. Espera unos segundos e intenta de nuevo.';
+        if (
+          error.message.includes('429') ||
+          error.message.includes('quota') ||
+          error.message.includes('RESOURCE_EXHAUSTED')
+        ) {
+          errorMsg =
+            '⏳ Límite de uso alcanzado. Espera unos segundos e intenta de nuevo.';
         } else if (error.message.includes('403')) {
-          errorMsg = '🔑 API key inválida o sin permisos. Verifica tu configuración.';
+          errorMsg =
+            '🔑 API key inválida o sin permisos. Verifica tu configuración.';
         } else if (error.message.includes('404')) {
-          errorMsg = '❌ Modelo no disponible. Verifica la configuración del modelo.';
+          errorMsg =
+            '❌ Modelo no disponible. Verifica la configuración del modelo.';
         } else {
           errorMsg = error.message;
         }
@@ -222,10 +229,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             Isoflow AI
           </Typography>
           {isProcessing && (
-            <CircularProgress
-              size={14}
-              sx={{ color: GLASS.accent, ml: 0.5 }}
-            />
+            <CircularProgress size={14} sx={{ color: GLASS.accent, ml: 0.5 }} />
           )}
         </Box>
         <Tooltip title="Cerrar" arrow>
@@ -372,12 +376,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     ? '12px 12px 2px 12px'
                     : '12px 12px 12px 2px',
                   background: isUser ? GLASS.userBubble : GLASS.aiBubble,
-                  border: isUser
-                    ? 'none'
-                    : `1px solid ${GLASS.borderLight}`,
-                  boxShadow: isUser
-                    ? '0 2px 8px rgba(99,102,241,0.25)'
-                    : 'none'
+                  border: isUser ? 'none' : `1px solid ${GLASS.borderLight}`,
+                  boxShadow: isUser ? '0 2px 8px rgba(99,102,241,0.25)' : 'none'
                 }}
               >
                 <Box
@@ -518,13 +518,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               width: 36,
               height: 36,
               borderRadius: '10px',
-              background: isProcessing
-                ? 'transparent'
-                : GLASS.userBubble,
+              background: isProcessing ? 'transparent' : GLASS.userBubble,
               color: '#fff',
               '&:hover': {
-                background:
-                  'linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)'
+                background: 'linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)'
               },
               '&.Mui-disabled': {
                 color: GLASS.textMuted,

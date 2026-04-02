@@ -274,8 +274,7 @@ export const UiOverlay = () => {
                   color: '#fff',
                   boxShadow:
                     '0 4px 20px rgba(99, 102, 241, 0.4), 0 0 0 0 rgba(99,102,241,0.3)',
-                  animation:
-                    'fabPulse 3s ease-in-out infinite',
+                  animation: 'fabPulse 3s ease-in-out infinite',
                   '@keyframes fabPulse': {
                     '0%, 100%': {
                       boxShadow:

@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: AISettings = {
   apiKey: process.env.GEMINI_API_KEY || '',
   privacyMode: 'private',
   temperature: 0.3,
-  maxTokens: 2000
+  maxTokens: 16384
 };
 
 export const useAI = () => {
@@ -37,6 +37,7 @@ export const useAI = () => {
     return state;
   });
   const {
+    createModelItem,
     createViewItem,
     createConnector,
     createTextBox,
@@ -79,12 +80,22 @@ export const useAI = () => {
       }),
       currentViewItems: items,
       viewId: currentView.id,
-      availableSpace: {
-        x: 0,
-        y: 0,
-        width: 1000,
-        height: 1000
-      },
+      availableSpace: (() => {
+        const tiles = items.map((vi) => vi.tile);
+        if (tiles.length === 0) {
+          return { x: -10, y: -10, width: 20, height: 20 };
+        }
+        const minX = Math.min(...tiles.map((t) => t.x));
+        const maxX = Math.max(...tiles.map((t) => t.x));
+        const minY = Math.min(...tiles.map((t) => t.y));
+        const maxY = Math.max(...tiles.map((t) => t.y));
+        return {
+          x: minX,
+          y: minY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1
+        };
+      })(),
       existingConnections: connectors,
       existingTextBoxes: textBoxes,
       existingRectangles: rectangles
@@ -161,7 +172,30 @@ export const useAI = () => {
 
   const applyAIResult = useCallback(
     async (result: AIResult): Promise<void> => {
+      const existingItemIds = new Set(
+        model.items.map((item) => {
+          return item.id;
+        })
+      );
+
       result.elements.forEach((element) => {
+        // Create a model item first if this is a new node (not already in model)
+        if (!existingItemIds.has(element.id)) {
+          const aiElement = element as {
+            id: string;
+            name?: string;
+            description?: string;
+            iconId?: string;
+            tile: { x: number; y: number };
+            labelHeight?: number;
+          };
+          createModelItem({
+            id: element.id,
+            name: aiElement.name || element.id,
+            icon: aiElement.iconId || undefined
+          });
+          existingItemIds.add(element.id);
+        }
         createViewItem(element);
       });
       result.connectors.forEach((connector) => {
@@ -171,10 +205,33 @@ export const useAI = () => {
         createTextBox(textBox);
       });
       result.rectangles.forEach((rectangle) => {
-        createRectangle(rectangle);
+        // Validate the color ID — AI may generate hex values instead of model color IDs
+        const validColorIds = new Set(
+          model.colors.map((c) => {
+            return c.id;
+          })
+        );
+        const fallbackColorId =
+          model.colors.length > 0 ? model.colors[0].id : 'color1';
+        const safeRectangle = {
+          ...rectangle,
+          color:
+            rectangle.color && validColorIds.has(rectangle.color)
+              ? rectangle.color
+              : fallbackColorId
+        };
+        createRectangle(safeRectangle);
       });
     },
-    [createViewItem, createConnector, createTextBox, createRectangle]
+    [
+      createModelItem,
+      createViewItem,
+      createConnector,
+      createTextBox,
+      createRectangle,
+      model.items,
+      model.colors
+    ]
   );
 
   const generateSchema = useCallback(
