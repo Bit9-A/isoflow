@@ -146,6 +146,7 @@ export interface UiState {
   mouse: Mouse;
   rendererEl: HTMLDivElement | null;
   enableDebugTools: boolean;
+  isChatOpen: boolean;
 }
 
 export interface UiStateActions {
@@ -166,6 +167,7 @@ export interface UiStateActions {
   setMouse: (mouse: Mouse) => void;
   setRendererEl: (el: HTMLDivElement) => void;
   setEnableDebugTools: (enabled: boolean) => void;
+  setIsChatOpen: (isOpen: boolean) => void;
 }
 
 export type UiStateStore = UiState & {

@@ -3,18 +3,14 @@ import {
   Box,
   CircularProgress,
   IconButton,
-  Paper,
   TextField,
-  Tooltip,
   Typography,
   useTheme,
-  Divider,
   Fade,
   Grow,
   Stack
 } from '@mui/material';
 import {
-  Clear,
   Close,
   Send,
   SmartToy,
@@ -30,14 +26,10 @@ import {
   useCreateChatSession,
   useUpdateChatMessage
 } from 'src/stores/aiStateStore';
+import { useUiStateStore } from 'src/stores/uiStateStore';
 import type { ChatMessage } from 'src/types/ai';
 import { extractStreamedText } from 'src/utils/aiUtils';
 import { UiElement } from 'src/components/UiElement/UiElement';
-
-interface ChatPanelProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-}
 
 const STREAMING_PLACEHOLDER = 'Analizando diagrama...';
 
@@ -54,13 +46,20 @@ const createAssistantMessage = (
   };
 };
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
+const ChatPanel: React.FC = () => {
   const theme = useTheme();
   const { items, connectors, textBoxes, rectangles } = useScene();
   const { executeInstruction, applyAIResult } = useAI();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const isChatOpen = useUiStateStore((state) => {
+    return state.isChatOpen;
+  });
+  const setIsChatOpen = useUiStateStore((state) => {
+    return state.actions.setIsChatOpen;
+  });
 
   const createChatSession = useCreateChatSession();
   const addMessage = useAddChatMessage();
@@ -83,16 +82,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
   }, [items.length, connectors.length, textBoxes.length, rectangles.length]);
 
   useEffect(() => {
-    if (!currentSession && isOpen) {
+    if (!currentSession && isChatOpen) {
       createChatSession('Arquitectura asistida por IA');
     }
-  }, [createChatSession, currentSession, isOpen]);
+  }, [createChatSession, currentSession, isChatOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentSession?.messages]);
 
-  if (!isOpen) {
+  if (!isChatOpen) {
     return null;
   }
 
@@ -229,7 +228,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
         </Box>
         <IconButton
           size="small"
-          onClick={onClose}
+          onClick={() => {
+            return setIsChatOpen(false);
+          }}
           sx={{
             color: 'grey.400',
             transition: 'all 0.2s',
@@ -405,8 +406,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
                       wordBreak: 'break-word',
                       fontSize: '0.85rem',
                       lineHeight: 1.5,
-                      color: isUser ? 'white' : 'text.primary',
-                      fontFamily: 'inherit'
+                      color: isUser ? 'white' : 'text.primary'
                     }}
                   >
                     {message.content === STREAMING_PLACEHOLDER && !isUser ? (

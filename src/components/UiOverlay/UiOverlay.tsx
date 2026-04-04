@@ -54,7 +54,12 @@ export const UiOverlay = () => {
   const theme = useTheme();
   const contextMenuAnchorRef = useRef();
   const { appPadding } = theme.customVars;
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const isChatOpen = useUiStateStore((state) => {
+    return state.isChatOpen;
+  });
+  const setIsChatOpen = useUiStateStore((state) => {
+    return state.actions.setIsChatOpen;
+  });
   const spacing = useCallback(
     (multiplier: number) => {
       return parseInt(theme.spacing(multiplier), 10);
@@ -246,12 +251,7 @@ export const UiOverlay = () => {
       {/* AI Chat Panel */}
       {availableTools.includes('AI_CHAT') && (
         <>
-          <ChatPanel
-            isOpen={isChatOpen}
-            onClose={() => {
-              return setIsChatOpen(false);
-            }}
-          />
+          <ChatPanel />
           {!isChatOpen && (
             <Box
               sx={{

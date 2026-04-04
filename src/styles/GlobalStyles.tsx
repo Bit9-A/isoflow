@@ -6,8 +6,16 @@ export const GlobalStyles = () => {
   return (
     <MUIGlobalStyles
       styles={{
-        div: {
-          boxSizing: 'border-box'
+        '*': {
+          boxSizing: 'border-box',
+          fontFamily: '"Outfit", sans-serif',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale'
+        },
+        body: {
+          margin: 0,
+          padding: 0,
+          fontFamily: '"Outfit", sans-serif'
         }
       }}
     />

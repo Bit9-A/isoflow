@@ -24,18 +24,43 @@ export const Examples = () => {
       <Select
         sx={{
           position: 'absolute',
-          bottom: theme.customVars.appPadding.y,
-          right: theme.customVars.appPadding.x,
-          bgcolor: 'common.white'
+          top: 20,
+          left: 100,
+          minWidth: 160,
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '12px',
+          fontFamily: '"Outfit", sans-serif',
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(0, 0, 0, 0.1)'
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.main'
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.main',
+            borderWidth: '1.5px'
+          }
         }}
         value={currentExample}
         onChange={(e) => {
           setCurrentExample(e.target.value as number);
         }}
+        variant="outlined"
+        size="small"
       >
         {examples.map((example, i) => {
           return (
-            <MenuItem key={example.name} value={i}>
+            <MenuItem 
+              key={example.name} 
+              value={i}
+              sx={{ 
+                fontFamily: '"Outfit", sans-serif',
+                fontSize: '0.85rem'
+              }}
+            >
               {example.name}
             </MenuItem>
           );

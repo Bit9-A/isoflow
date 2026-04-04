@@ -45,14 +45,23 @@ export const IconButton = ({
         variant="text"
         onClick={onClick}
         sx={{
-          borderRadius: 0,
+          borderRadius: 1.5,
           height: theme.customVars.toolMenu.height,
           width: theme.customVars.toolMenu.height,
           maxWidth: '100%',
           minWidth: 'auto',
-          bgcolor: isActive ? 'primary.light' : undefined,
+          bgcolor: isActive ? 'primary.light' : 'transparent',
+          color: isActive ? 'white' : iconColor,
           p: 0,
-          m: 0
+          m: 0,
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          '&:hover': {
+            bgcolor: isActive ? 'primary.main' : 'grey.100',
+            transform: 'scale(1.05)'
+          },
+          '&:active': {
+            transform: 'scale(0.95)'
+          }
         }}
       >
         <Box
@@ -61,7 +70,8 @@ export const IconButton = ({
             justifyContent: 'center',
             alignItems: 'center',
             svg: {
-              color: iconColor
+              color: 'inherit',
+              fontSize: 18
             }
           }}
         >

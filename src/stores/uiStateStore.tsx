@@ -30,6 +30,7 @@ const initialState = () => {
       },
       itemControls: null,
       enableDebugTools: false,
+      isChatOpen: false,
       actions: {
         setView: (view) => {
           set({ view });
@@ -91,6 +92,9 @@ const initialState = () => {
         },
         setRendererEl: (el) => {
           set({ rendererEl: el });
+        },
+        setIsChatOpen: (isChatOpen) => {
+          set({ isChatOpen });
         }
       }
     };

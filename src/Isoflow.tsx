@@ -58,6 +58,10 @@ const App = ({
     uiStateActions.setEnableDebugTools(enableDebugTools);
   }, [enableDebugTools, uiStateActions]);
 
+  const isChatOpen = useUiStateStore((state) => {
+    return state.isChatOpen;
+  });
+
   if (!initialDataManager.isReady) return null;
 
   return (
@@ -69,10 +73,22 @@ const App = ({
           height,
           position: 'relative',
           overflow: 'hidden',
-          transform: 'translateZ(0)'
+          display: 'flex',
+          transition: 'padding-right 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          paddingRight: isChatOpen ? '420px' : '0px',
+          backgroundColor: '#f8fafc'
         }}
       >
-        <Renderer {...renderer} />
+        <Box
+          sx={{
+            flex: 1,
+            position: 'relative',
+            height: '100%',
+            overflow: 'hidden'
+          }}
+        >
+          <Renderer {...renderer} />
+        </Box>
         <UiOverlay />
       </Box>
     </>
