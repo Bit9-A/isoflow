@@ -7,9 +7,21 @@ import {
   TextField,
   Tooltip,
   Typography,
-  useTheme
+  useTheme,
+  Divider,
+  Fade,
+  Grow,
+  Stack
 } from '@mui/material';
-import { Clear, Close, Send, SmartToy, AutoAwesome } from '@mui/icons-material';
+import {
+  Clear,
+  Close,
+  Send,
+  SmartToy,
+  AutoAwesome,
+  Person,
+  LightbulbCircle
+} from '@mui/icons-material';
 import { useScene } from 'src/hooks/useScene';
 import { useAI } from 'src/hooks/useAI';
 import {
@@ -42,31 +54,10 @@ const createAssistantMessage = (
   };
 };
 
-/* ─── Glassmorphism color tokens ──────────────────────── */
-const GLASS = {
-  bg: 'rgba(15, 23, 42, 0.72)',
-  bgLight: 'rgba(30, 41, 59, 0.55)',
-  border: 'rgba(99, 102, 241, 0.25)',
-  borderLight: 'rgba(148, 163, 184, 0.15)',
-  headerGrad:
-    'linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.25) 100%)',
-  userBubble: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-  aiBubble: 'rgba(30, 41, 59, 0.65)',
-  accent: '#818cf8',
-  glow: '0 8px 32px rgba(99, 102, 241, 0.18), 0 1.5px 6px rgba(0,0,0,0.25)',
-  pill: 'rgba(99, 102, 241, 0.12)',
-  pillText: '#a5b4fc',
-  inputBg: 'rgba(15, 23, 42, 0.55)',
-  inputBorder: 'rgba(99, 102, 241, 0.3)',
-  textPrimary: '#e2e8f0',
-  textSecondary: '#94a3b8',
-  textMuted: '#64748b'
-};
-
 const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
   const theme = useTheme();
   const { items, connectors, textBoxes, rectangles } = useScene();
-  const { executeInstruction, applyAIResult, settings } = useAI();
+  const { executeInstruction, applyAIResult } = useAI();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -157,13 +148,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
           error.message.includes('RESOURCE_EXHAUSTED')
         ) {
           errorMsg =
-            '⏳ Límite de uso alcanzado. Espera unos segundos e intenta de nuevo.';
+            'Límite de uso alcanzado. Espera unos segundos e intenta de nuevo.';
         } else if (error.message.includes('403')) {
           errorMsg =
-            '🔑 API key inválida o sin permisos. Verifica tu configuración.';
+            'API key inválida o sin permisos. Verifica tu configuración.';
         } else if (error.message.includes('404')) {
           errorMsg =
-            '❌ Modelo no disponible. Verifica la configuración del modelo.';
+            'Modelo no disponible. Verifica la configuración del modelo.';
         } else {
           errorMsg = error.message;
         }
@@ -190,16 +181,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        borderRadius: '16px',
-        border: `1px solid ${GLASS.border}`,
-        boxShadow: GLASS.glow,
-        backgroundColor: GLASS.bg,
-        backdropFilter: 'blur(24px) saturate(1.4)',
-        WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
         zIndex: 1200,
-        animation: 'chatSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        backgroundColor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 3,
+        border: '1px solid',
+        borderColor: 'grey.300',
+        animation: 'chatSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         '@keyframes chatSlideIn': {
-          '0%': { opacity: 0, transform: 'translateY(20px) scale(0.96)' },
+          '0%': { opacity: 0, transform: 'translateY(16px) scale(0.98)' },
           '100%': { opacity: 1, transform: 'translateY(0) scale(1)' }
         }
       }}
@@ -207,91 +197,99 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
       {/* ─── Header ─── */}
       <Box
         sx={{
-          px: 2,
-          py: 1.5,
+          px: 2.5,
+          py: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: GLASS.headerGrad,
-          borderBottom: `1px solid ${GLASS.borderLight}`
+          backgroundColor: 'white',
+          borderBottom: '1px solid',
+          borderColor: 'grey.200'
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AutoAwesome sx={{ fontSize: 18, color: GLASS.accent }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <AutoAwesome sx={{ fontSize: 20, color: 'secondary.main' }} />
           <Typography
             sx={{
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              color: GLASS.textPrimary,
-              letterSpacing: '0.02em'
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              color: 'text.primary',
+              letterSpacing: '-0.01em'
             }}
           >
             Isoflow AI
           </Typography>
           {isProcessing && (
-            <CircularProgress size={14} sx={{ color: GLASS.accent, ml: 0.5 }} />
+            <CircularProgress
+              size={14}
+              thickness={5}
+              sx={{ color: 'secondary.main', ml: 0.5 }}
+            />
           )}
         </Box>
-        <Tooltip title="Cerrar" arrow>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              color: GLASS.textSecondary,
-              '&:hover': {
-                color: GLASS.textPrimary,
-                backgroundColor: 'rgba(255,255,255,0.08)'
-              }
-            }}
-          >
-            <Close sx={{ fontSize: 18 }} />
-          </IconButton>
-        </Tooltip>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{
+            color: 'grey.400',
+            transition: 'all 0.2s',
+            '&:hover': {
+              color: 'error.main',
+              backgroundColor: 'error.light',
+              opacity: 0.1
+            }
+          }}
+        >
+          <Close sx={{ fontSize: 18 }} />
+        </IconButton>
       </Box>
 
       {/* ─── Context stats pills ─── */}
       <Box
         sx={{
-          px: 2,
-          py: 0.8,
+          px: 2.5,
+          py: 1,
           display: 'flex',
-          gap: 0.8,
+          gap: 1,
           flexWrap: 'wrap',
-          borderBottom: `1px solid ${GLASS.borderLight}`
+          backgroundColor: 'grey.50',
+          borderBottom: '1px solid',
+          borderColor: 'grey.100'
         }}
       >
         {[
           { label: 'Nodos', value: contextStats.nodes },
           { label: 'Conex.', value: contextStats.connectors },
-          { label: 'Notas', value: contextStats.notes },
           { label: 'Zonas', value: contextStats.zones }
         ].map((stat) => {
           return (
             <Box
               key={stat.label}
               sx={{
-                px: 1,
-                py: 0.2,
-                borderRadius: '6px',
-                backgroundColor: GLASS.pill,
+                px: 1.2,
+                py: 0.4,
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                border: '1px solid',
+                borderColor: 'grey.200',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.5
+                gap: 0.8
               }}
             >
               <Typography
                 sx={{
-                  fontSize: '0.65rem',
-                  color: GLASS.pillText,
-                  fontWeight: 600
+                  fontSize: '0.7rem',
+                  color: 'text.secondary',
+                  fontWeight: 500
                 }}
               >
                 {stat.label}
               </Typography>
               <Typography
                 sx={{
-                  fontSize: '0.65rem',
-                  color: GLASS.accent,
+                  fontSize: '0.7rem',
+                  color: 'primary.main',
                   fontWeight: 700
                 }}
               >
@@ -306,18 +304,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
       <Box
         sx={{
           flex: 1,
-          px: 2,
-          py: 1.5,
-          overflow: 'auto',
+          px: 2.5,
+          py: 2,
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: 1.2,
+          gap: 2,
+          backgroundColor: '#fff',
           '&::-webkit-scrollbar': {
-            width: 4
+            width: 5
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(99,102,241,0.3)',
-            borderRadius: 2
+            backgroundColor: 'grey.300',
+            borderRadius: 10
           },
           '&::-webkit-scrollbar-track': {
             backgroundColor: 'transparent'
@@ -325,121 +324,117 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
         }}
       >
         {messages.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              backgroundColor: GLASS.bgLight,
-              borderRadius: '12px',
-              border: `1px solid ${GLASS.borderLight}`
-            }}
-          >
-            <Typography
+          <Fade in timeout={600}>
+            <Box
               sx={{
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: GLASS.accent,
-                mb: 0.5
+                p: 3,
+                mt: 2,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+                border: '1px dashed',
+                borderColor: 'grey.300',
+                borderRadius: 2,
+                backgroundColor: 'grey.50'
               }}
             >
-              💡 Recomendado
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: '0.75rem',
-                color: GLASS.textSecondary,
-                lineHeight: 1.5
-              }}
-            >
-              &quot;Analiza mi arquitectura actual y sugiere mejoras de
-              seguridad&quot;
-            </Typography>
-          </Paper>
+              <LightbulbCircle sx={{ fontSize: 32, color: 'secondary.main' }} />
+              <Typography
+                variant="body2"
+                sx={{ color: 'text.secondary', lineHeight: 1.6 }}
+              >
+                Describe los cambios que necesitas o pide un análisis de tu
+                arquitectura actual para empezar.
+              </Typography>
+            </Box>
+          </Fade>
         )}
 
         {messages.map((message) => {
           const isUser = message.role === 'user';
 
           return (
-            <Box
-              key={message.id}
-              sx={{
-                display: 'flex',
-                justifyContent: isUser ? 'flex-end' : 'flex-start'
-              }}
-            >
+            <Grow in key={message.id}>
               <Box
                 sx={{
-                  maxWidth: '86%',
-                  p: 1.2,
-                  borderRadius: isUser
-                    ? '12px 12px 2px 12px'
-                    : '12px 12px 12px 2px',
-                  background: isUser ? GLASS.userBubble : GLASS.aiBubble,
-                  border: isUser ? 'none' : `1px solid ${GLASS.borderLight}`,
-                  boxShadow: isUser ? '0 2px 8px rgba(99,102,241,0.25)' : 'none'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: isUser ? 'flex-end' : 'flex-start',
+                  gap: 0.5
                 }}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    mb: 0.3
-                  }}
-                >
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.2 }}>
                   {isUser ? (
-                    <Typography
-                      sx={{
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        color: 'rgba(255,255,255,0.8)'
-                      }}
-                    >
-                      Tú
-                    </Typography>
+                    <>
+                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'text.secondary' }}>
+                        Tú
+                      </Typography>
+                      <Person sx={{ fontSize: 14, color: 'primary.main' }} />
+                    </>
                   ) : (
                     <>
-                      <SmartToy sx={{ fontSize: 12, color: GLASS.accent }} />
+                      <SmartToy sx={{ fontSize: 14, color: 'secondary.main' }} />
+                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'secondary.main' }}>
+                        AI
+                      </Typography>
+                    </>
+                  )}
+                </Stack>
+                <Box
+                  sx={{
+                    maxWidth: '90%',
+                    p: 1.5,
+                    borderRadius: isUser
+                      ? '16px 4px 16px 16px'
+                      : '4px 16px 16px 16px',
+                    backgroundColor: isUser ? 'primary.main' : 'grey.100',
+                    border: isUser ? 'none' : '1px solid',
+                    borderColor: 'grey.200',
+                    boxShadow: isUser ? '0 4px 12px rgba(99, 102, 241, 0.15)' : 'none',
+                    transition: 'transform 0.2s',
+                    '&:active': {
+                      transform: 'scale(0.98)'
+                    }
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      fontSize: '0.85rem',
+                      lineHeight: 1.5,
+                      color: isUser ? 'white' : 'text.primary',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    {message.content === STREAMING_PLACEHOLDER && !isUser ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CircularProgress size={12} thickness={6} color="inherit" />
+                        {message.content}
+                      </Box>
+                    ) : (
+                      message.content
+                    )}
+                  </Typography>
+
+                  {!isUser && message.metadata?.confidence != null && (
+                    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
                       <Typography
                         sx={{
                           fontSize: '0.65rem',
-                          fontWeight: 700,
-                          color: GLASS.accent
+                          color: 'text.disabled',
+                          fontWeight: 600
                         }}
                       >
-                        AI
+                        Confianza: {Math.round(message.metadata.confidence * 100)}%
                       </Typography>
-                      {message.metadata?.confidence != null && (
-                        <Typography
-                          sx={{
-                            fontSize: '0.6rem',
-                            color: GLASS.textMuted,
-                            ml: 0.5
-                          }}
-                        >
-                          {Math.round(message.metadata.confidence * 100)}%
-                        </Typography>
-                      )}
-                    </>
+                    </Box>
                   )}
                 </Box>
-                <Typography
-                  component="pre"
-                  sx={{
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    margin: 0,
-                    fontFamily: 'inherit',
-                    fontSize: '0.8rem',
-                    lineHeight: 1.55,
-                    color: isUser ? '#fff' : GLASS.textPrimary
-                  }}
-                >
-                  {message.content}
-                </Typography>
               </Box>
-            </Box>
+            </Grow>
           );
         })}
 
@@ -449,93 +444,75 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ isOpen = true, onClose }) => {
       {/* ─── Input area ─── */}
       <Box
         sx={{
-          borderTop: `1px solid ${GLASS.borderLight}`,
-          p: 1.5
+          borderTop: '1px solid',
+          borderColor: 'grey.100',
+          p: 2,
+          backgroundColor: 'white'
         }}
       >
-        <Box sx={{ display: 'flex', gap: 0.8, alignItems: 'flex-end' }}>
+        <Stack direction="row" spacing={1.5} alignItems="flex-end">
           <TextField
             fullWidth
             multiline
-            maxRows={3}
-            size="small"
-            placeholder="Ej: revisa seguridad de red y IAM"
+            maxRows={4}
+            placeholder="Ej: Añade un balanceador de carga..."
             value={inputValue}
-            onChange={(event) => {
-              return setInputValue(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 handleSendMessage();
               }
             }}
             disabled={isProcessing}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: GLASS.inputBg,
-                borderRadius: '10px',
-                color: GLASS.textPrimary,
-                fontSize: '0.8rem',
+                backgroundColor: 'grey.50',
+                borderRadius: '12px',
+                fontSize: '0.85rem',
                 '& fieldset': {
-                  borderColor: GLASS.inputBorder
+                  borderColor: 'grey.200'
                 },
                 '&:hover fieldset': {
-                  borderColor: GLASS.accent
+                  borderColor: 'grey.300'
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: GLASS.accent,
+                  borderColor: 'primary.main',
                   borderWidth: 1.5
                 }
-              },
-              '& .MuiInputBase-input::placeholder': {
-                color: GLASS.textMuted,
-                opacity: 1
               }
             }}
           />
-          <Tooltip title="Limpiar" arrow>
-            <span>
-              <IconButton
-                size="small"
-                onClick={() => {
-                  return setInputValue('');
-                }}
-                disabled={isProcessing || !inputValue}
-                sx={{
-                  color: GLASS.textMuted,
-                  '&:hover': { color: GLASS.textSecondary }
-                }}
-              >
-                <Clear sx={{ fontSize: 16 }} />
-              </IconButton>
-            </span>
-          </Tooltip>
           <IconButton
             onClick={handleSendMessage}
             disabled={isProcessing || !inputValue.trim()}
             sx={{
-              width: 36,
-              height: 36,
-              borderRadius: '10px',
-              background: isProcessing ? 'transparent' : GLASS.userBubble,
-              color: '#fff',
+              width: 44,
+              height: 44,
+              borderRadius: '12px',
+              backgroundColor: isProcessing ? 'grey.100' : 'primary.main',
+              color: 'white',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)'
+                backgroundColor: 'primary.dark',
+                transform: 'translateY(-2px)'
+              },
+              '&:active': {
+                transform: 'scale(0.95)'
               },
               '&.Mui-disabled': {
-                color: GLASS.textMuted,
-                background: 'rgba(255,255,255,0.05)'
+                backgroundColor: 'grey.100',
+                color: 'grey.400'
               }
             }}
           >
             {isProcessing ? (
-              <CircularProgress size={18} sx={{ color: GLASS.accent }} />
+              <CircularProgress size={20} color="inherit" />
             ) : (
-              <Send sx={{ fontSize: 16 }} />
+              <Send sx={{ fontSize: 20 }} />
             )}
           </IconButton>
-        </Box>
+        </Stack>
       </Box>
     </UiElement>
   );
